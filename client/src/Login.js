@@ -1,40 +1,67 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-
-
-
+import { useNavigate, Link } from "react-router-dom";
+import Cookies from 'js-cookie';
 
 const Login = () => {
   const [nombre, setNombre] = useState("")
   const [contraseña, setContraseña] = useState("")
   const [error, setError] = useState(0)
+  const url = "http://localhost:3001/autenticar"
+  const redirect = useNavigate()
 
-const handleSubmit = (e) => { 
+const handleSubmit = async (e) => {
   e.preventDefault()
-  console.log(e);
-  if(nombre === "" || contraseña === ""){
-    setError(1)
-    return
-  }
-
-  if(false){
+  if (nombre === null || contraseña === null) {
     setError(2)
     return
   }
-    
-  setError(0) // sin error
+
+  if (nombre.trim().length === 0 || contraseña.trim().length === 0) {
+    setError(2)
+    return
+  }
+
+  const data = {
+    nombre: nombre,
+    contraseña: contraseña
+  }
+
+  const response = await fetch(url, {
+    method: 'POST', // *GET, POST, PUT, DELETE, etc.
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data)
+  })
+
+  if (response === null) {
+    setError(-1)
+    return
+  }
+
+  const resdata = await response.json();
+
+  if (resdata.message === "ok") {
+    setError(1)
+    Cookies.set('usuario', nombre);
+    redirect('/Home')
+  } else {
+    setError(3)
+  }
 }
 
 const errorSwitch = () => {
   switch(error) {
     case 0:
-      return <p className="text-align-center"> bienvenido</p>
+      return <p> </p>
     case 1:
-      return <p> Todos los campos son obligatorios</p>
+      return <p className="text-align-center"> bienvenido</p>
     case 2:
+      return <p> Todos los campos son obligatorios</p>
+    case 3:
       return <p> El nombre de usuario o la contraseña son incorrectos</p>
     default:
-      return <p> Error desconocido</p>;
+      return <p> Error desconocido o de red</p>;
   }
 }
   
@@ -58,7 +85,9 @@ const errorSwitch = () => {
           <button type="submit" className="btn btn-success w-100 rounded-0">Login</button>
         </form>
         <p>Usted está de acuerdo con nuestros términos y condiciones</p>
-        <Link to='/signup' className='btn btn-default border w-100 bg-light rounded-0'>Crear Cuenta</Link>
+        <Link to='/signup' className='btn btn-default border w-100 bg-light rounded-0 mb-4'>Crear Cuenta</Link>
+        <br/>
+        <Link to='/ChangePass' className='btn btn-default border w-100 bg-light rounded-0'>Cambio Contraseña</Link>
       {errorSwitch()} 
       </div>
     </div>
